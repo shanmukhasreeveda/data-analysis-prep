@@ -10,7 +10,7 @@ List every refunded order: order_id, order_date, customer full name,
 and the number of items in the order. Oldest first.
 ✔️ Check: 12 rows. The first is order 16 (Isha Brown, 2025-05-22, 1 item).*/
 
-select  (c.first_name ||' '|| c.last_name) as customer_name, o.order_date,
+select  o.order_id, (c.first_name ||' '|| c.last_name) as customer_name, o.order_date,
 count(oi.order_id) as number_of_items
 from orders o
 join customers c on c.customer_id = o.customer_id 
@@ -95,3 +95,33 @@ LEFT JOIN orders o ON o.customer_id = c.customer_id
   WHERE c.province = 'BC'
 GROUP BY c.customer_id;
 
+/*E6 · Avoiding double counting
+For completed orders, show for each channel: the number of orders, 
+the number of order lines, and revenue. Highest revenue first.
+✔️ Check: web: 142 orders, 252 lines, revenue 12,149.32.
+Hint: one order has several lines, so think about which count needs DISTINCT.
+*/
+
+select distinct(o.channel),count(distinct o.order_id) as total_orders, 
+count(oi.order_item_id) as total_lines,
+sum(oi.quantity * p.unit_price *(1-oi.discount_pct)) as revenue
+from order_items oi
+left join orders o on o.order_id = oi.order_id
+join products p on p.product_id = oi.product_id
+where o.status = 'completed'
+group by o.channel
+order by revenue desc;
+
+/*E7 · Self-join with dates (challenge ⭐)
+How many customers placed two orders within 7 days of each other, 
+meaning the second order came 1 to 7 days after the first? Any status counts.
+✔️ Check: 23 customers.
+Hint: join orders to itself on customer_id, with a date condition like: 
+sql: b.order_date > a.order_date AND b.order_date <= a.order_date + 7
+In PostgreSQL, date + 7 means 7 days later. Then count distinct customers.
+*/
+
+select count(distinct a.customer_id)
+from orders a
+join orders b on b.customer_id = a.customer_id 
+where b.order_date > a.order_date and b.order_date <= a.order_date+7;
