@@ -165,7 +165,6 @@ with total_net_revenue as(
 	left join orders o on o.customer_id = c.customer_id  and o.status = 'completed'
 	left join order_items oi on oi.order_id = o.order_id 
 	left join products p on p.product_id = oi.product_id 
-	where o.status = 'completed'
 	group by UPPER(TRIM(c.province))
 )
 select province, round(revenue,2) as total_revenue, paying_customers,
